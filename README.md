@@ -21,7 +21,7 @@ npm install
 2) Configure env vars (see `.env.example`)
 - `DATABASE_URL` – Neon connection string (with SSL)
 - `DB_SCHEMA` (optional) – schema name, defaults to `edu_manager`
-3) Run servers
+3) Run servers (use VITE_API_URL in prod so the SPA calls your API host)
 ```
 npm run server   # starts API on 4000
 npm run dev      # starts Vite on 3000, proxies /api to 4000
@@ -36,6 +36,7 @@ npm run dev      # starts Vite on 3000, proxies /api to 4000
 ## Deployment Notes
 - Frontend can be deployed to Vercel/Netlify; set proxy or env for API URL.
 - Backend can be deployed to Render/Railway/Fly; set `DATABASE_URL` (Neon) and optional `DB_SCHEMA`.
+- Frontend on Vercel: set `VITE_API_URL` to your backend URL (e.g. https://edumanager-rtkk.onrender.com).
 
 ## Manual Test Checklist
 - Add/update/delete student and teacher

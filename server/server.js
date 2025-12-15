@@ -313,7 +313,7 @@ app.post('/api/enrollments', async (req, res) => {
   }
 });
 
-const port = 4000;
+const port = process.env.PORT || 4000;
 
 init()
   .then(() => {

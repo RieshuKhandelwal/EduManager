@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, UserPlus, Search } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 async function jsonOr(res, fallback) {
   const text = await res.text();
   if (!text) return fallback;
@@ -11,14 +12,14 @@ async function jsonOr(res, fallback) {
 const api = {
   students: {
     getAll: async () => {
-      const res = await fetch('/api/students');
+      const res = await fetch(`${API_BASE}/api/students`);
       const data = await jsonOr(res, []);
       return data.map(s => ({ ...s, id: Number(s.id) }));
     }
   },
   courses: {
     getAll: async () => {
-      const res = await fetch('/api/courses');
+      const res = await fetch(`${API_BASE}/api/courses`);
       const data = await jsonOr(res, []);
       return data.map(c => ({
         ...c,
@@ -29,14 +30,14 @@ const api = {
   },
   teachers: {
     getAll: async () => {
-      const res = await fetch('/api/teachers');
+      const res = await fetch(`${API_BASE}/api/teachers`);
       const data = await jsonOr(res, []);
       return data.map(t => ({ ...t, id: Number(t.id) }));
     }
   },
   enrollments: {
     getAll: async () => {
-      const res = await fetch('/api/enrollments');
+      const res = await fetch(`${API_BASE}/api/enrollments`);
       const data = await jsonOr(res, []);
       return data.map(e => ({
         ...e,
@@ -46,7 +47,7 @@ const api = {
       }));
     },
     add: async (studentId, courseId) => {
-      const res = await fetch('/api/enrollments', {
+      const res = await fetch(`${API_BASE}/api/enrollments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, courseId })

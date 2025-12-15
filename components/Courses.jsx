@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, User, BookOpen } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 async function jsonOr(res, fallback) {
   const text = await res.text();
   if (!text) return fallback;
@@ -11,7 +12,7 @@ async function jsonOr(res, fallback) {
 const api = {
   courses: {
     getAll: async () => {
-      const res = await fetch('/api/courses');
+      const res = await fetch(`${API_BASE}/api/courses`);
       const data = await jsonOr(res, []);
       return data.map(c => ({
         ...c,
@@ -20,7 +21,7 @@ const api = {
       }));
     },
     add: async (course) => {
-      const res = await fetch('/api/courses', {
+      const res = await fetch(`${API_BASE}/api/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(course)
@@ -33,7 +34,7 @@ const api = {
       };
     },
     assignTeacher: async (courseId, teacherId) => {
-      const res = await fetch(`/api/courses/${courseId}/assign`, {
+      const res = await fetch(`${API_BASE}/api/courses/${courseId}/assign`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherId })
@@ -48,7 +49,7 @@ const api = {
   },
   teachers: {
     getAll: async () => {
-      const res = await fetch('/api/teachers');
+      const res = await fetch(`${API_BASE}/api/teachers`);
       const data = await jsonOr(res, []);
       return data.map(t => ({ ...t, id: Number(t.id) }));
     }

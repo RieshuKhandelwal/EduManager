@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, GraduationCap, BookOpen, ClipboardList, ArrowUpRight, Plus } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 async function jsonOr(res, fallback) {
   const text = await res.text();
   if (!text) return fallback;
@@ -11,21 +13,21 @@ async function jsonOr(res, fallback) {
 const api = {
   students: { 
     getAll: async () => {
-      const res = await fetch('/api/students');
+      const res = await fetch(`${API_BASE}/api/students`);
       const data = await jsonOr(res, []);
       return data.map(s => ({ ...s, id: Number(s.id) }));
     } 
   },
   teachers: { 
     getAll: async () => {
-      const res = await fetch('/api/teachers');
+      const res = await fetch(`${API_BASE}/api/teachers`);
       const data = await jsonOr(res, []);
       return data.map(t => ({ ...t, id: Number(t.id) }));
     } 
   },
   courses: { 
     getAll: async () => {
-      const res = await fetch('/api/courses');
+      const res = await fetch(`${API_BASE}/api/courses`);
       const data = await jsonOr(res, []);
       return data.map(c => ({
         ...c,
@@ -36,7 +38,7 @@ const api = {
   },
   enrollments: { 
     getAll: async () => {
-      const res = await fetch('/api/enrollments');
+      const res = await fetch(`${API_BASE}/api/enrollments`);
       const data = await jsonOr(res, []);
       return data.map(e => ({
         ...e,

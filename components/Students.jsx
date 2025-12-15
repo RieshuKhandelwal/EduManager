@@ -3,16 +3,18 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Mail } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 const api = {
   students: {
     getAll: async () => {
-      const res = await fetch('/api/students');
+      const res = await fetch(`${API_BASE}/api/students`);
       const text = await res.text();
       const data = text ? JSON.parse(text) : [];
       return data;
     },
     add: async (student) => {
-      const res = await fetch('/api/students', {
+      const res = await fetch(`${API_BASE}/api/students`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(student)
@@ -21,7 +23,7 @@ const api = {
       return res.json();
     },
     update: async (id, payload) => {
-      const res = await fetch(`/api/students/${id}`, {
+      const res = await fetch(`${API_BASE}/api/students/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -30,7 +32,7 @@ const api = {
       return res.json();
     },
     remove: async (id) => {
-      const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/students/${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete student');
     }
   }
