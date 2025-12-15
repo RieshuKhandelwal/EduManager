@@ -111,8 +111,8 @@ export const Dashboard = ({ navigate }) => {
         enrollments: enrollments.length
       });
 
-      // Process recent enrollments
-      const recent = enrollments.slice(-3).reverse().map(enroll => {
+      // API returns enrollments ordered DESC by id, so take first 3 entries
+      const recent = enrollments.slice(0, 3).map(enroll => {
         const student = students.find(s => s.id === enroll.studentId);
         const course = courses.find(c => c.id === enroll.courseId);
         return { ...enroll, student, course };
