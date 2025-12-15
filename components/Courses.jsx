@@ -50,6 +50,7 @@ export const Courses = () => {
   const [assignData, setAssignData] = useState({ teacherId: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadData();
@@ -58,6 +59,7 @@ export const Courses = () => {
   const loadData = async () => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const [cData, tData] = await Promise.all([api.courses.getAll(), api.teachers.getAll()]);
       setCourses(cData);
@@ -73,6 +75,7 @@ export const Courses = () => {
     e.preventDefault();
     try {
       await api.courses.add(formData);
+      setSuccess('Course created.');
     } catch (err) {
       setError(formatError(err));
     } finally {
@@ -87,6 +90,7 @@ export const Courses = () => {
     if (selectedCourse && assignData.teacherId) {
       try {
         await api.courses.assignTeacher(selectedCourse.id, assignData.teacherId);
+        setSuccess('Teacher assignment saved.');
       } catch (err) {
         setError(formatError(err));
       }
@@ -123,6 +127,11 @@ export const Courses = () => {
       {error && (
         <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
           {error}
+        </div>
+      )}
+      {success && (
+        <div className="p-3 rounded-lg border border-emerald-700/40 bg-emerald-900/30 text-emerald-200 text-sm">
+          {success}
         </div>
       )}
       {loading && (

@@ -75,21 +75,12 @@ const QuickAction = ({ title, onClick }) => (
   </motion.button>
 );
 
-export const Dashboard = ({ navigate }) => {
+export const Dashboard = ({ navigate, activeTab }) => {
   const [stats, setStats] = useState({ students: 0, teachers: 0, courses: 0, enrollments: 0 });
   const [recentEnrollments, setRecentEnrollments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const formatIST = (dateStr) => {
-    try {
-      const d = new Date(dateStr);
-      return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }).format(d);
-    } catch {
-      return dateStr;
-    }
-  };
-
-  useEffect(() => {
+  const fetchData = () => {
     setLoading(true);
     setError('');
     Promise.all([
@@ -115,13 +106,38 @@ export const Dashboard = ({ navigate }) => {
     }).catch((err) => {
       setError(formatError(err));
     }).finally(() => setLoading(false));
-  }, []);
+  };
+  const formatIST = (dateStr) => {
+    try {
+      const d = new Date(dateStr);
+      return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+    } catch {
+      return dateStr;
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchData();
+    }
+  }, [activeTab]);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
         <p className="text-slate-400">Overview of the school's current status and metrics.</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={fetchData}
+          className="px-3 py-2 text-sm rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700"
+          disabled={loading}
+        >
+          {loading ? 'Refreshing…' : 'Refresh'}
+        </motion.button>
       </div>
       {error && (
         <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">

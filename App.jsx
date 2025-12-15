@@ -13,7 +13,7 @@ const App = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard navigate={setActiveTab} />;
+        return <Dashboard navigate={setActiveTab} activeTab={activeTab} />;
       case 'students':
         return <Students />;
       case 'teachers':

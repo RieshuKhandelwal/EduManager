@@ -52,6 +52,7 @@ export const Enrollments = () => {
   const [formData, setFormData] = useState({ studentId: '', courseId: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadData();
@@ -60,6 +61,7 @@ export const Enrollments = () => {
   const loadData = async () => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const [sData, cData, tData, eData] = await Promise.all([
         api.students.getAll(), 
@@ -86,6 +88,7 @@ export const Enrollments = () => {
       if (!exists) {
         try {
           await api.enrollments.add(formData.studentId, formData.courseId);
+          setSuccess('Enrollment added.');
         } catch (err) {
           setError(formatError(err));
         } finally {
@@ -124,6 +127,11 @@ export const Enrollments = () => {
       {error && (
         <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
           {error}
+        </div>
+      )}
+      {success && (
+        <div className="p-3 rounded-lg border border-emerald-700/40 bg-emerald-900/30 text-emerald-200 text-sm">
+          {success}
         </div>
       )}
       {loading && (

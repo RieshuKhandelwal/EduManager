@@ -25,6 +25,7 @@ export const Teachers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadTeachers();
@@ -33,6 +34,7 @@ export const Teachers = () => {
   const loadTeachers = async () => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const data = await api.teachers.getAll();
       setTeachers(data);
@@ -49,6 +51,7 @@ export const Teachers = () => {
     setTeachers((prev) => [{ id: tempId, ...formData }, ...prev]);
     try {
       await api.teachers.add(formData);
+      setSuccess('Teacher added successfully.');
     } catch (err) {
       setError(formatError(err));
     }
@@ -68,6 +71,7 @@ export const Teachers = () => {
     setTeachers((prev) => prev.map((t) => (t.id === id ? { ...t, name, email, subject, gender } : t)));
     try {
       await api.teachers.update(id, { name, email, subject, gender });
+      setSuccess('Teacher updated successfully.');
     } catch (err) {
       setError(formatError(err));
     }
@@ -81,6 +85,7 @@ export const Teachers = () => {
     setTeachers((prev) => prev.filter((t) => t.id !== id));
     try {
       await api.teachers.remove(id);
+      setSuccess('Teacher deleted.');
     } catch (err) {
       setError(formatError(err));
     }
@@ -109,6 +114,11 @@ export const Teachers = () => {
       {error && (
         <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
           {error}
+        </div>
+      )}
+      {success && (
+        <div className="p-3 rounded-lg border border-emerald-700/40 bg-emerald-900/30 text-emerald-200 text-sm">
+          {success}
         </div>
       )}
       {loading && (

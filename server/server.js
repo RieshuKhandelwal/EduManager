@@ -158,6 +158,10 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.post('/api/students', async (req, res) => {
   const { name, email, grade, gender } = req.body || {};
   try {
