@@ -18,9 +18,10 @@ Simple student–teacher module with courses and enrollments.
 ```
 npm install
 ```
-2) Configure env vars (see `.env.example`)
+2) Configure env vars (see `env.sample`)
 - `DATABASE_URL` – Neon connection string (with SSL)
 - `DB_SCHEMA` (optional) – schema name, defaults to `edu_manager`
+- `VITE_API_URL` – your deployed API base, e.g. `https://edumanager-rtkk.onrender.com`
 3) Run servers (use VITE_API_URL in prod so the SPA calls your API host)
 ```
 npm run server   # starts API on 4000
