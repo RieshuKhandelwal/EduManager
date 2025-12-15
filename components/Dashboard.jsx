@@ -104,15 +104,16 @@ export const Dashboard = ({ navigate }) => {
       api.courses.getAll(),
       api.enrollments.getAll()
     ]).then(([students, teachers, courses, enrollments]) => {
+      const sortedEnrollments = [...enrollments].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
       setStats({
         students: students.length,
         teachers: teachers.length,
         courses: courses.length,
-        enrollments: enrollments.length
+        enrollments: sortedEnrollments.length
       });
 
       // API returns enrollments ordered DESC by id, so take first 3 entries
-      const recent = enrollments.slice(0, 3).map(enroll => {
+      const recent = sortedEnrollments.slice(0, 3).map(enroll => {
         const student = students.find(s => s.id === enroll.studentId);
         const course = courses.find(c => c.id === enroll.courseId);
         return { ...enroll, student, course };
