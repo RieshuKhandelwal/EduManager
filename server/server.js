@@ -168,7 +168,9 @@ app.post('/api/students', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    console.error(e);
+    if (e.code === '23505') {
+      return res.status(409).json({ error: 'Student email already exists' });
+    }
     res.status(500).json({ error: 'Failed to create student' });
   }
 });
@@ -185,7 +187,9 @@ app.put('/api/students/:id', async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    console.error(e);
+    if (e.code === '23505') {
+      return res.status(409).json({ error: 'Student email already exists' });
+    }
     res.status(500).json({ error: 'Failed to update student' });
   }
 });
@@ -220,7 +224,9 @@ app.post('/api/teachers', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    console.error(e);
+    if (e.code === '23505') {
+      return res.status(409).json({ error: 'Teacher email already exists' });
+    }
     res.status(500).json({ error: 'Failed to create teacher' });
   }
 });
@@ -235,7 +241,9 @@ app.put('/api/teachers/:id', async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    console.error(e);
+    if (e.code === '23505') {
+      return res.status(409).json({ error: 'Teacher email already exists' });
+    }
     res.status(500).json({ error: 'Failed to update teacher' });
   }
 });
@@ -269,7 +277,9 @@ app.post('/api/courses', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    console.error(e);
+    if (e.code === '23505') {
+      return res.status(409).json({ error: 'Course code already exists' });
+    }
     res.status(500).json({ error: 'Failed to create course' });
   }
 });
@@ -278,13 +288,19 @@ app.put('/api/courses/:id/assign', async (req, res) => {
   const { id } = req.params;
   const { teacherId } = req.body || {};
   try {
+    if (teacherId) {
+      const teacher = await pool.query('SELECT id FROM teachers WHERE id = $1', [teacherId]);
+      if (teacher.rowCount === 0) {
+        return res.status(400).json({ error: 'Invalid teacher id' });
+      }
+    }
     const { rows } = await pool.query(
       'UPDATE courses SET teacher_id = $1 WHERE id = $2 RETURNING *',
       [teacherId || null, id]
     );
+    if (!rows[0]) return res.status(404).json({ error: 'Course not found' });
     res.json(rows[0]);
   } catch (e) {
-    console.error(e);
     res.status(500).json({ error: 'Failed to assign teacher' });
   }
 });
@@ -306,9 +322,9 @@ app.post('/api/enrollments', async (req, res) => {
       'INSERT INTO enrollments(student_id, course_id) VALUES($1, $2) ON CONFLICT (student_id, course_id) DO NOTHING RETURNING *',
       [studentId, courseId]
     );
+    if (!rows[0]) return res.status(409).json({ error: 'Student already enrolled in this course' });
     res.status(201).json(rows[0] || null);
   } catch (e) {
-    console.error(e);
     res.status(500).json({ error: 'Failed to create enrollment' });
   }
 });

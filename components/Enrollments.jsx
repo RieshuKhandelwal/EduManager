@@ -3,24 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, UserPlus, Search } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
-const API_BASE = import.meta.env.VITE_API_URL || '';
-async function jsonOr(res, fallback) {
-  const text = await res.text();
-  if (!text) return fallback;
-  try { return JSON.parse(text); } catch { return fallback; }
-}
+import { apiClient, formatError } from '../services/apiClient.js';
 const api = {
   students: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/students`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/students');
       return data.map(s => ({ ...s, id: Number(s.id) }));
     }
   },
   courses: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/courses`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/courses');
       return data.map(c => ({
         ...c,
         id: Number(c.id),
@@ -30,15 +23,13 @@ const api = {
   },
   teachers: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/teachers`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/teachers');
       return data.map(t => ({ ...t, id: Number(t.id) }));
     }
   },
   enrollments: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/enrollments`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/enrollments');
       return data.map(e => ({
         ...e,
         id: Number(e.id),
@@ -47,12 +38,7 @@ const api = {
       }));
     },
     add: async (studentId, courseId) => {
-      const res = await fetch(`${API_BASE}/api/enrollments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId, courseId })
-      });
-      return res.json();
+      return apiClient.post('/api/enrollments', { studentId, courseId });
     }
   }
 };
@@ -64,22 +50,32 @@ export const Enrollments = () => {
   const [enrollments, setEnrollments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ studentId: '', courseId: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const [sData, cData, tData, eData] = await Promise.all([
-      api.students.getAll(), 
-      api.courses.getAll(), 
-      api.teachers.getAll(),
-      api.enrollments.getAll()
-    ]);
-    setStudents(sData);
-    setCourses(cData);
-    setTeachers(tData);
-    setEnrollments(eData);
+    setLoading(true);
+    setError('');
+    try {
+      const [sData, cData, tData, eData] = await Promise.all([
+        api.students.getAll(), 
+        api.courses.getAll(), 
+        api.teachers.getAll(),
+        api.enrollments.getAll()
+      ]);
+      setStudents(sData);
+      setCourses(cData);
+      setTeachers(tData);
+      setEnrollments(eData);
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEnroll = async (e) => {
@@ -88,12 +84,17 @@ export const Enrollments = () => {
       // Check if already enrolled
       const exists = enrollments.some(e => e.studentId == formData.studentId && e.courseId == formData.courseId);
       if (!exists) {
-        await api.enrollments.add(formData.studentId, formData.courseId);
-        setFormData({ studentId: '', courseId: '' });
-        setIsModalOpen(false);
-        loadData();
+        try {
+          await api.enrollments.add(formData.studentId, formData.courseId);
+        } catch (err) {
+          setError(formatError(err));
+        } finally {
+          setFormData({ studentId: '', courseId: '' });
+          setIsModalOpen(false);
+          loadData();
+        }
       } else {
-        alert("Student already enrolled in this course");
+        setError('Student already enrolled in this course');
       }
     }
   };
@@ -120,6 +121,14 @@ export const Enrollments = () => {
           Enroll Student
         </motion.button>
       </div>
+      {error && (
+        <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <div className="p-2 text-slate-400 text-sm">Loading enrollments…</div>
+      )}
 
       {/* Matrix View */}
       <div className="bg-slate-900/50 border border-slate-800/60 rounded-2xl overflow-hidden overflow-x-auto shadow-2xl">

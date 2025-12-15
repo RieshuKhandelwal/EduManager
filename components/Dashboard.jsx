@@ -3,32 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, GraduationCap, BookOpen, ClipboardList, ArrowUpRight, Plus } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
-const API_BASE = import.meta.env.VITE_API_URL || '';
-
-async function jsonOr(res, fallback) {
-  const text = await res.text();
-  if (!text) return fallback;
-  try { return JSON.parse(text); } catch { return fallback; }
-}
+import { apiClient, formatError } from '../services/apiClient.js';
 const api = {
   students: { 
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/students`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/students');
       return data.map(s => ({ ...s, id: Number(s.id) }));
     } 
   },
   teachers: { 
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/teachers`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/teachers');
       return data.map(t => ({ ...t, id: Number(t.id) }));
     } 
   },
   courses: { 
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/courses`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/courses');
       return data.map(c => ({
         ...c,
         id: Number(c.id),
@@ -38,8 +29,7 @@ const api = {
   },
   enrollments: { 
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/enrollments`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/enrollments');
       return data.map(e => ({
         ...e,
         id: Number(e.id),
@@ -88,6 +78,8 @@ const QuickAction = ({ title, onClick }) => (
 export const Dashboard = ({ navigate }) => {
   const [stats, setStats] = useState({ students: 0, teachers: 0, courses: 0, enrollments: 0 });
   const [recentEnrollments, setRecentEnrollments] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const formatIST = (dateStr) => {
     try {
       const d = new Date(dateStr);
@@ -98,6 +90,8 @@ export const Dashboard = ({ navigate }) => {
   };
 
   useEffect(() => {
+    setLoading(true);
+    setError('');
     Promise.all([
       api.students.getAll(),
       api.teachers.getAll(),
@@ -112,14 +106,15 @@ export const Dashboard = ({ navigate }) => {
         enrollments: sortedEnrollments.length
       });
 
-      // API returns enrollments ordered DESC by id, so take first 3 entries
       const recent = sortedEnrollments.slice(0, 3).map(enroll => {
         const student = students.find(s => s.id === enroll.studentId);
         const course = courses.find(c => c.id === enroll.courseId);
         return { ...enroll, student, course };
       });
       setRecentEnrollments(recent);
-    });
+    }).catch((err) => {
+      setError(formatError(err));
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
@@ -128,6 +123,14 @@ export const Dashboard = ({ navigate }) => {
         <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
         <p className="text-slate-400">Overview of the school's current status and metrics.</p>
       </div>
+      {error && (
+        <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <div className="p-2 text-slate-400 text-sm">Loading dashboard…</div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 

@@ -3,17 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, User, BookOpen } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
-const API_BASE = import.meta.env.VITE_API_URL || '';
-async function jsonOr(res, fallback) {
-  const text = await res.text();
-  if (!text) return fallback;
-  try { return JSON.parse(text); } catch { return fallback; }
-}
+import { apiClient, formatError } from '../services/apiClient.js';
 const api = {
   courses: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/courses`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/courses');
       return data.map(c => ({
         ...c,
         id: Number(c.id),
@@ -21,12 +15,7 @@ const api = {
       }));
     },
     add: async (course) => {
-      const res = await fetch(`${API_BASE}/api/courses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(course)
-      });
-      const c = await jsonOr(res, null);
+      const c = await apiClient.post('/api/courses', course);
       return {
         ...c,
         id: Number(c.id),
@@ -34,12 +23,7 @@ const api = {
       };
     },
     assignTeacher: async (courseId, teacherId) => {
-      const res = await fetch(`${API_BASE}/api/courses/${courseId}/assign`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacherId })
-      });
-      const c = await jsonOr(res, null);
+      const c = await apiClient.put(`/api/courses/${courseId}/assign`, { teacherId });
       return {
         ...c,
         id: Number(c.id),
@@ -49,8 +33,7 @@ const api = {
   },
   teachers: {
     getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/teachers`);
-      const data = await jsonOr(res, []);
+      const data = await apiClient.get('/api/teachers');
       return data.map(t => ({ ...t, id: Number(t.id) }));
     }
   }
@@ -65,29 +48,48 @@ export const Courses = () => {
   
   const [formData, setFormData] = useState({ name: '', code: '', description: '' });
   const [assignData, setAssignData] = useState({ teacherId: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const [cData, tData] = await Promise.all([api.courses.getAll(), api.teachers.getAll()]);
-    setCourses(cData);
-    setTeachers(tData);
+    setLoading(true);
+    setError('');
+    try {
+      const [cData, tData] = await Promise.all([api.courses.getAll(), api.teachers.getAll()]);
+      setCourses(cData);
+      setTeachers(tData);
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddCourse = async (e) => {
     e.preventDefault();
-    await api.courses.add(formData);
-    setFormData({ name: '', code: '', description: '' });
-    setIsModalOpen(false);
-    loadData();
+    try {
+      await api.courses.add(formData);
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setFormData({ name: '', code: '', description: '' });
+      setIsModalOpen(false);
+      loadData();
+    }
   };
 
   const handleAssignTeacher = async (e) => {
     e.preventDefault();
     if (selectedCourse && assignData.teacherId) {
-      await api.courses.assignTeacher(selectedCourse.id, assignData.teacherId);
+      try {
+        await api.courses.assignTeacher(selectedCourse.id, assignData.teacherId);
+      } catch (err) {
+        setError(formatError(err));
+      }
       setIsAssignModalOpen(false);
       setSelectedCourse(null);
       setAssignData({ teacherId: '' });
@@ -118,6 +120,14 @@ export const Courses = () => {
           Add Course
         </motion.button>
       </div>
+      {error && (
+        <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <div className="p-2 text-slate-400 text-sm">Loading courses…</div>
+      )}
 
       <div className="space-y-4">
         {courses.map((course, idx) => {

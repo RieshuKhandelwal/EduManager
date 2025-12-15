@@ -3,38 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Book, Mail, Search } from 'lucide-react';
 import { Avatar } from './Avatar.jsx';
+import { apiClient, formatError } from '../services/apiClient.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
 const api = {
   teachers: {
-    getAll: async () => {
-      const res = await fetch(`${API_BASE}/api/teachers`);
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : [];
-      return data;
-    },
-    add: async (teacher) => {
-      const res = await fetch(`${API_BASE}/api/teachers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(teacher)
-      });
-      if (!res.ok) throw new Error('Failed to save teacher');
-      return res.json();
-    },
-    update: async (id, payload) => {
-      const res = await fetch(`${API_BASE}/api/teachers/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('Failed to update teacher');
-      return res.json();
-    },
-    remove: async (id) => {
-      const res = await fetch(`${API_BASE}/api/teachers/${id}`, { method: 'DELETE' });
-      if (!res.ok && res.status !== 204) throw new Error('Failed to delete teacher');
-    }
+    getAll: async () => apiClient.get('/api/teachers'),
+    add: async (teacher) => apiClient.post('/api/teachers', teacher),
+    update: async (id, payload) => apiClient.put(`/api/teachers/${id}`, payload),
+    remove: async (id) => apiClient.delete(`/api/teachers/${id}`)
   }
 };
 
@@ -47,14 +23,24 @@ export const Teachers = () => {
   const [editData, setEditData] = useState({ id: null, name: '', email: '', subject: '', gender: 'male' });
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadTeachers();
   }, []);
 
   const loadTeachers = async () => {
-    const data = await api.teachers.getAll();
-    setTeachers(data);
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.teachers.getAll();
+      setTeachers(data);
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -64,7 +50,7 @@ export const Teachers = () => {
     try {
       await api.teachers.add(formData);
     } catch (err) {
-      alert('Failed to save teacher to database');
+      setError(formatError(err));
     }
     setFormData({ name: '', email: '', subject: '', gender: 'male' });
     setIsModalOpen(false);
@@ -83,7 +69,7 @@ export const Teachers = () => {
     try {
       await api.teachers.update(id, { name, email, subject, gender });
     } catch (err) {
-      alert('Failed to update teacher in database');
+      setError(formatError(err));
     }
     setIsEditOpen(false);
     setActionsFor(null);
@@ -96,7 +82,7 @@ export const Teachers = () => {
     try {
       await api.teachers.remove(id);
     } catch (err) {
-      alert('Failed to delete teacher from database');
+      setError(formatError(err));
     }
     setIsDeleteOpen(false);
     setActionsFor(null);
@@ -120,6 +106,14 @@ export const Teachers = () => {
           Add Teacher
         </motion.button>
       </div>
+      {error && (
+        <div className="p-3 rounded-lg border border-rose-700/40 bg-rose-900/30 text-rose-200 text-sm">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <div className="p-2 text-slate-400 text-sm">Loading teachers…</div>
+      )}
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
           <Search className="w-4 h-4" />
